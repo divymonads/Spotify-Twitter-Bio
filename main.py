@@ -2,9 +2,7 @@ import spotipy, tweepy
 import spotipy.util as util
 from login_data import SPOTIPY_USERNAME, SPOTIPY_SCOPE, SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET
 from login_data import TW_ACCESS_TOKEN, TW_ACCESS_SECRET, TW_API_KEY, TW_API_SECRET
-import pprint
-import sys
-
+import time
 
 # Spotify API
 token = util.prompt_for_user_token(SPOTIPY_USERNAME,
@@ -16,8 +14,6 @@ if token:
     print('Spotify Credentials OK')
 else:
     print("Error during Spotify authentication")
-    twit_ok = False
-    sys.exit()
 
 
 # Authenticate to Twitter
@@ -34,7 +30,6 @@ try:
 except:
     print("Error during Twitter authentication")
     twit_ok = False
-    sys.exit()
 
 
 bio_add_on = (" | 🎶 listening to ") 
@@ -46,29 +41,32 @@ def getCurrBio():
         curr_bio = curr_bio[:x]
     return curr_bio
 
-def getNewBio():
+def getNewBio(currently_playing):
     bio_str = bio_add_on + currently_playing['item']['artists'][0]['name']
     curr_bio = getCurrBio()
-    new_bio = curr_bio + bio_str 
+    new_bio = curr_bio + bio_str + " on spotify"
     return curr_bio, new_bio
 
 def main_procedure():
-    sp = spotipy.Spotify(auth=token)
-    currently_playing = sp.currently_playing()
-    pp = pprint.PrettyPrinter(indent=4)
+    try:
+        sp = spotipy.Spotify(auth=token)
+        currently_playing = sp.currently_playing()
 
-    if currently_playing and currently_playing['is_playing']: 
-        curr_bio, new_bio = getNewBio()
-    else:
-        new_bio = getCurrBio()
-   
-    # Just basic maxlength requirement
-    new_bio = new_bio[:160]
+        if currently_playing and currently_playing['is_playing']: 
+            curr_bio, new_bio = getNewBio(currently_playing)
+        else:
+            new_bio = getCurrBio()
+       
+        # Just basic maxlength requirement
+        new_bio = new_bio[:160]
 
-    twit_api.update_profile(description=new_bio)
-    
-    print(new_bio)
+        twit_api.update_profile(description=new_bio)
+        
+        print(new_bio)
+    except:
+        print("broken")
 
-def lambda_handler(_event_json, _context):
+while True:
     if token and twit_ok:
         main_procedure()
+        time.sleep(60)
