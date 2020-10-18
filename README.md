@@ -18,17 +18,17 @@ Gets the currently playing from the website and tacks it onto your twitter bio. 
 
 ## Requirements
 
-boto3==1.14.38
-botocore==1.17.38
-certifi==2020.6.20
-chardet==3.0.4
-docutils==0.15.2
-idna==2.10
-jmespath==0.10.0
-oauthlib==3.1.0
-PySocks==1.7.1
-python-dateutil==2.8.1
-requests==2.24.0
+- boto3==1.14.38
+- botocore==1.17.38
+- certifi==2020.6.20
+- chardet==3.0.4
+- docutils==0.15.2
+- idna==2.10
+- jmespath==0.10.0
+- oauthlib==3.1.0
+- PySocks==1.7.1
+- python-dateutil==2.8.1
+- requests==2.24.0
 requests-oauthlib==1.3.0
 s3transfer==0.3.3
 six==1.15.0
