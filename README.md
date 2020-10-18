@@ -12,7 +12,7 @@ If you need an introduction to Twitter bots and the Tweepy API on Lambda, I've m
 
 It saves a copy of your user spotify API token into DynamoDB with an expiration date. It checks if it's expired, and updates accordingly. I took the basic idea of this from Josh Spicer's website, since my original version wasn't automating the authentication.
 
-Gets the currently playing from the website and tacks it onto your twitter bio. It's a bit fickle, but works. Just a small weekend project! If nothing's playing then it displays nothing, but this could be easily changed to include recently played statuses.
+Gets the currently playing from the website and tacks it onto your twitter bio. It's a bit fickle but works. Just a small weekend project! If nothing's playing then it displays nothing, but this could be easily changed to include recently played statuses.
 
 ![Screenshot of Twitter Bio](./screenshot.png?raw=true "Screenshot")
 

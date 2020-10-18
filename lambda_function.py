@@ -99,10 +99,12 @@ def lambda_handler(event, context):
     isPlaying, currBio, newBio = makeRequest(accessToken)
     
     # Make Twitter Request
-    if isPlaying:
+    if isPlaying and newBio:
         newBio = newBio[:160]
         print(newBio)
         twit_api.update_profile(description=newBio)
+    elif not newBio:
+        print("couldn't get the artist")
     elif getCurrBioAddOnIndex() != -1:
         print("nothing playing, but rewriting bio")
         twit_api.update_profile(description=currBio)
