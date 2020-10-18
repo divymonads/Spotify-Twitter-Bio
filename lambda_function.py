@@ -69,7 +69,8 @@ def makeRequest(accessToken):
         if isPlaying:
             newBio = getNewBio(r_json)
     except:
-        pass
+        print("we couldn't get the new bio, missing artist?")
+        newBio = currBio
     return isPlaying, currBio, newBio 
 
 
@@ -103,8 +104,6 @@ def lambda_handler(event, context):
         newBio = newBio[:160]
         print(newBio)
         twit_api.update_profile(description=newBio)
-    elif not newBio:
-        print("couldn't get the artist")
     elif getCurrBioAddOnIndex() != -1:
         print("nothing playing, but rewriting bio")
         twit_api.update_profile(description=currBio)
