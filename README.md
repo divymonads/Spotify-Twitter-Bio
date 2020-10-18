@@ -29,9 +29,9 @@ Gets the currently playing from the website and tacks it onto your twitter bio. 
 - PySocks==1.7.1
 - python-dateutil==2.8.1
 - requests==2.24.0
-requests-oauthlib==1.3.0
-s3transfer==0.3.3
-six==1.15.0
-spotipy==2.13.0
-tweepy==3.9.0
-urllib3==1.25.10
+- requests-oauthlib==1.3.0
+- s3transfer==0.3.3
+- six==1.15.0
+- spotipy==2.13.0
+- tweepy==3.9.0
+- urllib3==1.25.10
