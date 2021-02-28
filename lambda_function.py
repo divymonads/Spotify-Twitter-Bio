@@ -100,6 +100,7 @@ def makeRequest(accessToken):
         nakedBio = nakedBio[:bioIndex]
 
     toUpdate = False
+    newBio = currBio
     try:
         isPlaying = spotify_current_json['is_playing']
         if not isPlaying:
