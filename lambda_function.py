@@ -35,20 +35,16 @@ def refreshTheToken(refreshToken):
 # Calculate Bio Functionality
 bio_add_on = " | 🎶 listening to " 
 
-def getCurrBioAddOnIndex():
-    currBio = twit_api.me()._json['description']
-    return currBio.rfind(bio_add_on)
-
 def getCurrBio():
     currBio = twit_api.me()._json['description']
-    x = getCurrBioAddOnIndex()
-    if x != -1:
+    x = currBio.rfind(bio_add_on)
+    hasSpotifyBio = (x!=-1)
+    if hasSpotifyBio:
         currBio = currBio[:x]
-    return currBio
+    return hasSpotifyBio, currBio
 
-def getNewBio(currently_playing):
+def getNewBio(currently_playing, currBio):
     bio_str = bio_add_on + currently_playing['item']['artists'][0]['name']
-    currBio = getCurrBio()
     newBio = currBio + bio_str + " on spotify"
     return newBio
 
@@ -62,16 +58,16 @@ def makeRequest(accessToken):
 
     isPlaying = False
     newBio = ''
-    currBio = getCurrBio()
+    hasSpotifyBio, currBio = getCurrBio()
     try:
         r_json = r.json()
         isPlaying = r_json['is_playing']
         if isPlaying:
-            newBio = getNewBio(r_json)
+            newBio = getNewBio(r_json, currBio)
     except:
         print("we couldn't get the new bio, missing artist?")
         newBio = currBio
-    return isPlaying, currBio, newBio 
+    return hasSpotifyBio, isPlaying, currBio, newBio 
 
 
 
@@ -97,15 +93,15 @@ def lambda_handler(event, context):
     accessToken = dbResponse['Item']['accessToken']
 
     # Make Spotify Request
-    isPlaying, currBio, newBio = makeRequest(accessToken)
+    hasSpotifyBio, isPlaying, currBio, newBio = makeRequest(accessToken)
     
     # Make Twitter Request
     if isPlaying and newBio:
         newBio = newBio[:160]
         print(newBio)
         twit_api.update_profile(description=newBio)
-    elif getCurrBioAddOnIndex() != -1:
-        print("nothing playing, but rewriting bio")
+    elif hasSpotifyBio:
+        print("nothing playing, but resetting bio")
         twit_api.update_profile(description=currBio)
     else:
         pass
