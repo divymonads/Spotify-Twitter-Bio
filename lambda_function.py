@@ -1,9 +1,6 @@
-import tweepy
-import os
-import requests
-import time 
-import boto3
-import json
+import os, requests, time, json 
+import tweepy, boto3
+from enum import Enum
 
 # Authenticate to Twitter
 auth = tweepy.OAuthHandler(os.environ['TW_API_KEY'], os.environ['TW_API_SECRET'])
@@ -13,6 +10,14 @@ twit_api = tweepy.API(auth)
 # Connect DynamoDB database
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('SpotifyState')
+
+# Calculate Bio Functionality
+bio_marker_listening = " | 🎶 listening to " 
+bio_marker_listened =" | 🎶 last listened to "
+class BioStatus(Enum):
+    NEUTRAL = 0
+    LISTENING = 1
+    LISTENED = 2
 
 # Initial Spotify Refresh Token
 refreshToken = os.environ['INITIAL_SPOTIFY_REFRESH']
@@ -32,42 +37,82 @@ def refreshTheToken(refreshToken):
     table.put_item(Item={'spotify': 'prod', 'expiresAt': int(time.time()) + 3200,
                                         'accessToken': spotifyToken['access_token']})
 
-# Calculate Bio Functionality
-bio_add_on = " | 🎶 listening to " 
+def getCurrentlyListeningJson(accessToken):
+    headers = {'Authorization': 'Bearer ' + accessToken,
+                   'Content-Type': 'application/json', 
+                   'Accept': 'application/json'}
+    r = requests.get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
+    try:
+        r = r.json()
+    except:
+        print("currently played couldn't be json")
+        r = None
+    return r
+
+def getLastPlayedJson(accessToken):
+    print("getting last played")
+    headers = {'Authorization': 'Bearer ' + accessToken,
+                   'Content-Type': 'application/json', 
+                   'Accept': 'application/json'}
+    r = requests.get('https://api.spotify.com/v1/me/player/recently-played?limit=1', headers=headers)
+    try:
+        r = r.json()
+    except:
+        print("last played couldn't be json")
+        r = None
+    return r
+
+def getBioStatus(currBio):
+    x = currBio.rfind(bio_marker_listening)
+    if x!=-1:
+        return x, BioStatus.LISTENING
+    x = currBio.rfind(bio_marker_listened)
+    if x!=-1:
+        return x, BioStatus.LISTENED
+    return x, BioStatus.NEUTRAL
 
 def getCurrBio():
-    currBio = twit_api.me()._json['description']
-    x = currBio.rfind(bio_add_on)
-    hasSpotifyBio = (x!=-1)
-    if hasSpotifyBio:
-        currBio = currBio[:x]
-    return hasSpotifyBio, currBio
+    return twit_api.me()._json['description']
 
-def getNewBio(currently_playing, currBio):
-    bio_str = bio_add_on + currently_playing['item']['artists'][0]['name']
-    newBio = currBio + bio_str + " on spotify"
-    return newBio
+def notPlayingBio(r_json, nakedBio):
+    make_twitter_request = True
+    artist = r_json['items'][0]['track']['artists'][0]['name']
+    newBio = nakedBio + bio_marker_listened + artist + " on spotify"
+    return make_twitter_request, newBio
 
+def playingBio(r_json, bioStatus, currBio, nakedBio):
+    make_twitter_request = False
+    artist = r_json['item']['artists'][0]['name']
+    newBio = nakedBio + bio_marker_listening + artist + " on spotify"
+    if bioStatus != BioStatus.LISTENING or currBio != newBio:
+        make_twitter_request = True
+    return make_twitter_request, newBio
 
 # Get Currently Playing
 # Basic Idea for refresh token renewal copied from JoshSpicer.com
 def makeRequest(accessToken):
-    headers = {'Authorization': 'Bearer ' + accessToken,
-                   'Content-Type': 'application/json', 'Accept': 'application/json'}
-    r = requests.get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
+    spotify_current_json = getCurrentlyListeningJson(accessToken)
 
-    isPlaying = False
-    newBio = ''
-    hasSpotifyBio, currBio = getCurrBio()
+    currBio = getCurrBio()
+    nakedBio = currBio    
+    bioIndex, bioStatus = getBioStatus(currBio)
+    if bioStatus != BioStatus.NEUTRAL:
+        nakedBio = nakedBio[:bioIndex]
+
+    toUpdate = False
     try:
-        r_json = r.json()
-        isPlaying = r_json['is_playing']
-        if isPlaying:
-            newBio = getNewBio(r_json, currBio)
+        isPlaying = spotify_current_json['is_playing']
+        if not isPlaying:
+            if bioStatus != BioStatus.LISTENED: # change bio to listened status
+                spotify_prev_json = getLastPlayedJson(accessToken)
+                toUpdate, newBio = notPlayingBio(spotify_prev_json, nakedBio)
+        else:
+            toUpdate, newBio = playingBio(spotify_current_json, bioStatus, currBio, nakedBio)
     except:
-        print("we couldn't get the new bio, missing artist?")
-        newBio = currBio
-    return hasSpotifyBio, isPlaying, currBio, newBio 
+        print("something went wrong when trying to get the new bio")
+        newBio = nakedBio
+        toUpdate = True
+    return toUpdate, newBio
 
 
 
@@ -86,23 +131,20 @@ def lambda_handler(event, context):
     dbResponse = table.get_item(Key={'spotify': 'prod'})
     expiresAt = dbResponse['Item']['expiresAt']
     if expiresAt <= time.time():
+        print("refreshing the token")
         refreshTheToken(refreshToken)
 
     # Get Token
     dbResponse = table.get_item(Key={'spotify': 'prod'})
     accessToken = dbResponse['Item']['accessToken']
 
-    # Make Spotify Request
-    hasSpotifyBio, isPlaying, currBio, newBio = makeRequest(accessToken)
+    # Make Request
+    toUpdate, newBio = makeRequest(accessToken)
     
     # Make Twitter Request
-    if isPlaying and newBio:
+    if toUpdate:
         newBio = newBio[:160]
-        print(newBio)
+        print("updating bio: \n", newBio)
         twit_api.update_profile(description=newBio)
-    elif hasSpotifyBio:
-        print("nothing playing, but resetting bio")
-        twit_api.update_profile(description=currBio)
     else:
-        pass
-
+        print("no bio to update")
