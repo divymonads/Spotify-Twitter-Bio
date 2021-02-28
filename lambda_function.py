@@ -102,8 +102,7 @@ def makeRequest(accessToken):
     toUpdate = False
     newBio = currBio
     try:
-        isPlaying = spotify_current_json['is_playing']
-        if not isPlaying:
+        if not spotify_current_json or not spotify_current_json['is_playing']:
             if bioStatus != BioStatus.LISTENED: # change bio to listened status
                 spotify_prev_json = getLastPlayedJson(accessToken)
                 toUpdate, newBio = notPlayingBio(spotify_prev_json, nakedBio)
