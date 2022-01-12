@@ -8,7 +8,7 @@ This is a Lambda solution. I've uploaded a different copy of the code into a Lam
 
 It uses the spotify's web api and the Tweepy API. 
 
-If you need an introduction to Twitter bots and the Tweepy API on Lambda, I've made one on my [site](https://dgandhi.me/a-first-twitter-bot/).
+If you need an introduction to Twitter bots and the Tweepy API on Lambda.
 
 It saves a copy of your user spotify API token into DynamoDB with an expiration date. It checks if it's expired, and updates accordingly. I took the basic idea of this from Josh Spicer's website, since my original version wasn't automating the authentication.
 
