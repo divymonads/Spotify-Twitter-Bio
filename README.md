@@ -6,13 +6,11 @@ This project integrates spotify's currently playing and recently played into twi
 
 This is a Lambda solution. I've uploaded a different copy of the code into a Lambda in my free-tier AWS account.
 
-It uses the spotify's web api and the Tweepy API. 
+It uses the spotify's web api and the Tweepy API.
 
-If you need an introduction to Twitter bots and the Tweepy API on Lambda.
+It saves a copy of your user spotify API token into DynamoDB with an expiration date. It checks if it's expired, and updates accordingly. I took the basic idea of this from Josh Spicer's website.
 
-It saves a copy of your user spotify API token into DynamoDB with an expiration date. It checks if it's expired, and updates accordingly. I took the basic idea of this from Josh Spicer's website, since my original version wasn't automating the authentication.
-
-Gets the currently playing from the website and tacks it onto your twitter bio. It's a bit fickle but works. Just a small weekend project! If nothing's playing then it'll display recently played.
+Gets the currently playing from the website and tacks it onto your twitter bio. It's a bit fickle but works. Just a small weekend project! If nothing's playing, then it'll display recently played.
 
 ![Screenshot of Twitter Bio](./screenshot.png?raw=true "Screenshot")
 
