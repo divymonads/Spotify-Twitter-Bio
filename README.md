@@ -2,6 +2,8 @@
 
 This project integrates spotify's currently playing and recently played into twitter bios.
 
+![Screenshot of Twitter Bio](./screenshot.png?raw=true "Screenshot")
+
 ## How it works
 
 This is a Lambda solution. I've uploaded a different copy of the code into a Lambda in my free-tier AWS account.
