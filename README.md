@@ -12,8 +12,6 @@ It saves a copy of your user spotify API token into DynamoDB with an expiration 
 
 Gets the currently playing from the website and tacks it onto your twitter bio. It's a bit fickle but works. Just a small weekend project! If nothing's playing, then it'll display recently played.
 
-![Screenshot of Twitter Bio](./screenshot.png?raw=true "Screenshot")
-
 ## Requirements
 
 - boto3==1.14.38
